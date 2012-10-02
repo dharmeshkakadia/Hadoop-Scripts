@@ -8,31 +8,27 @@
 
 # Download and move hadoop
 wget $1
-echo "wget done"
 tar xzf hadoop-*
 rm hadoop-*.tar.gz
 sudo rm -rf /usr/local/hadoop
 sudo mv hadoop-* /usr/local/hadoop
 #sudo chown -R hduser:hadoop /usr/local/hadoop
 
-hadoop_masters=/usr/local/hadoop/conf/masters
-hadoop_slaves=/usr/local/hadoop/conf/slaves
-servers="$(cat $hadoop_masters $hadoop_slaves)"
-JAVA_HOME=/usr/lib/jvm/java-1.6.0-openjdk-amd64
-
 # configure
+echo "-----------starting configuration-------------"
 sudo rm -rf /app/hadoop/tmp
 sudo mkdir -p /app/hadoop/tmp
-#sudo chown hduser:hadoop /app/hadoop/tmp
 
-#mv /usr/local/hadoop/conf/hadoop-env.sh /usr/local/hadoop/conf/hadoop-env.sh.backup
 cd /usr/local/hadoop/conf/
-
+# actually not needed, used by start-all.sh and stop-all.sh
 # master and slave files
 echo `grep -i jobtracker $2 | cut -f 2 | cut -d ":" -f 1` > masters
 echo `grep -i slave $2 | cut -f 2` > slaves
 
+# change JAVA_HOME according to your environment
+JAVA_HOME=/usr/lib/jvm/java-1.6.0-openjdk-amd64
 echo "export JAVA_HOME=$JAVA_HOME" >> hadoop-env.sh
+
 #core-site.xml
 echo -e "<?xml version=\"1.0\"?>
 <?xml-stylesheet type=\"text/xsl\" href=\"configuration.xsl\"?>
@@ -85,18 +81,23 @@ for srv in $(cat $hadoop_slaves); do
   #ssh $srv "rm -fR /usr/local/$2 ; ln -s /usr/local/hadoop /usr/local/$"
 done
 
+# All the nodes in the cluster
+servers="$(cat masters slaves)"
+
+echo "-----------starting hadoop cluster-------------"
 # format namenode
 cd /usr/local/hadoop/bin/
 ./hadoop namenode -format
 ./start-dfs.sh
 ./start-mapred.sh
 
+echo "-----------Verfing hadoop daemons-------------"
 # verify
 for srv in $servers; do
-  echo "Sending command to $srv..."; 
+  echo "Running jps on $srv........."; 
 #  ssh $srv "ps aux | grep -v grep | grep java"
   ssh $srv "jps"
 done
 
-echo "done."
+echo "done!!!!!!"
 
