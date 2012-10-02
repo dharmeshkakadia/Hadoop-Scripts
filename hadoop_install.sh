@@ -1,7 +1,10 @@
 #!/bin/bash
-
+# Downloads and configures hadoop on cluster.
 # To Do
 # Install Dependdencies like java, ssh etc
+# takes two arguments
+#	$1 is URL to download the hadoop tar
+#	$2 is properties file which gives the cluster parameters (see the example Properties file)
 
 # Download and move hadoop
 wget $1
@@ -91,7 +94,8 @@ cd /usr/local/hadoop/bin/
 # verify
 for srv in $servers; do
   echo "Sending command to $srv..."; 
-  ssh $srv "ps aux | grep -v grep | grep java"
+#  ssh $srv "ps aux | grep -v grep | grep java"
+  ssh $srv "jps"
 done
 
 echo "done."
