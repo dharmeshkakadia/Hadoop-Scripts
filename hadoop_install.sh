@@ -1,10 +1,10 @@
-#!/bin/bash
+!/bin/bash
 # Downloads and configures hadoop on cluster.
 # To Do
 # Install Dependdencies like java, ssh etc
 # takes two arguments
-#	$1 is URL to download the hadoop tar
-#	$2 is properties file which gives the cluster parameters (see the example Properties file)
+#       $1 is URL to download the hadoop tar
+#       $2 is properties file which gives the cluster parameters (see the example Properties file)
 
 # Download and move hadoop
 wget $1
@@ -22,8 +22,8 @@ sudo mkdir -p /app/hadoop/tmp
 cd /usr/local/hadoop/conf/
 # actually not needed, used by start-all.sh and stop-all.sh
 # master and slave files
-echo `grep -i jobtracker $2 | cut -f 2 | cut -d ":" -f 1` > masters
-echo `grep -i slave $2 | cut -f 2` > slaves
+grep -i jobtracker $2 | cut -f 2 | cut -d ":" -f 1 > masters
+grep -i slave $2 | cut -f 2 > slaves
 
 # change JAVA_HOME according to your environment
 JAVA_HOME=/usr/lib/jvm/java-1.6.0-openjdk-amd64
@@ -75,8 +75,8 @@ echo -e "<?xml version=\"1.0\"?>
 </configuration>" > hdfs-site.xml
 
 # rsync to slaves
-for srv in $(cat $hadoop_slaves); do
-  echo "Sending command to $srv..."; 
+for srv in $(cat /usr/local/hadoop/conf/slaves); do
+  echo "Sending command to $srv...";
   rsync -vaz --exclude='logs/*' /usr/local/hadoop $srv:/usr/local/
   #ssh $srv "rm -fR /usr/local/$2 ; ln -s /usr/local/hadoop /usr/local/$"
 done
@@ -94,10 +94,9 @@ cd /usr/local/hadoop/bin/
 echo "-----------Verfing hadoop daemons-------------"
 # verify
 for srv in $servers; do
-  echo "Running jps on $srv........."; 
+  echo "Running jps on $srv.........";
 #  ssh $srv "ps aux | grep -v grep | grep java"
   ssh $srv "jps"
 done
 
 echo "done!!!!!!"
-

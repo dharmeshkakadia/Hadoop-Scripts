@@ -1,9 +1,3 @@
-# This file specifies the nodes in the cluster. This information is used to configure hadoop.
-# format is 
-# role_of_node[tab]private_ip[tab]public_ip
-# public_ips are optional
-# slave runs both datanode and tasktracker
-
 jobtracker	172.17.12.15:54311	10.2.4.69
 namenode	172.17.12.15:54310	10.2.4.69
 slave	172.17.12.16
