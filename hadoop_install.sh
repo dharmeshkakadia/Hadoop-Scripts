@@ -6,6 +6,12 @@
 #       $1 is URL to download the hadoop tar
 #       $2 is properties file which gives the cluster parameters (see the example Properties file)
 
+# Argument check
+if [ "$#" -ne 2 ]; then
+  echo "Usage: $0 URL Cluster_properties_file" >&2
+  exit 1
+fi
+
 # Download and move hadoop
 wget $1
 tar xzf hadoop-*
@@ -78,7 +84,7 @@ echo -e "<?xml version=\"1.0\"?>
 for srv in $(cat /usr/local/hadoop/conf/slaves); do
   echo "Sending command to $srv...";
   rsync -vaz --exclude='logs/*' /usr/local/hadoop $srv:/usr/local/
-  #ssh $srv "rm -fR /usr/local/$2 ; ln -s /usr/local/hadoop /usr/local/$"
+  ssh $srv "rm -fR /app"
 done
 
 # All the nodes in the cluster
