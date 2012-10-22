@@ -11,4 +11,6 @@ Syntax: ./hadoop_install Hadoop_download_URL Cluster_properties
 
 Syntax: ./ssh-id-copy location_of_identity_file location_of_properties_file
 
+3) add-node.sh adds a node to already running hadoop cluster.
 
+Syntax: ./add-node.sh Node_ip
