@@ -19,5 +19,5 @@ chmod a+x ssh-copy-id.sh
 
 ./ssh-copy-id.sh $1 $2
 
-./hadoop_install.sh -o $2
+./hadoop_install.sh $2
 
