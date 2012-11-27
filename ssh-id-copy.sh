@@ -12,7 +12,7 @@ user="root"
 
 #jobtracker=`cat $properties_file | grep -i jobtracker | cut -f 2 | cut -d ":" -f 1`
 
-slaves=`cat $properties_file | grep -i slave | cut -f 2 -d " "`
+slaves=`cat $properties_file | grep -i slave | cut -f 2`
 echo "slaves" $slaves
 
 # Here we check if a keypair already exists in the default location. If not, we create one.
