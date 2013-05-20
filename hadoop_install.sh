@@ -136,6 +136,13 @@ function copyToSlaves(){
 	done
 }
 
+function startDaemon(){
+	for srv in $1 ; do
+	  echo "Starting $2 on $srv...";
+	  ssh $srv "$HADOOP_DIR/bin/hadoop-daemon.sh start $2"
+	done
+}
+
 # Verify the status of hadoop-daemons
 function verifyJPS(){
 	echo "-----------Verfing hadoop daemons-------------"
@@ -167,30 +174,10 @@ if [ $NN_FORMAT -eq 1 ] ;then
 	ssh $NAMENODE "$HADOOP_DIR/bin/hadoop namenode -format"
 fi
 
-echo "Starting the NameNode on $NAMENODE"
-ssh $NAMENODE "$HADOOP_DIR/bin/hadoop-daemon.sh start namenode"
-
-while read -r dn
-do
-    echo "Starting DataNode...$dn ......"
-	ssh "$dn" "$HADOOP_DIR/bin/hadoop-daemon.sh start datanode"
-done <<< "$DATANODE"
-
-echo "Starting the jobtracker on $JOBTRACKER"
-ssh $JOBTRACKER "$HADOOP_DIR/bin/hadoop-daemon.sh start jobtracker"
-
-while read -r tt
-do
-    echo "Starting the tasktracker on $tt ....."
-    ssh $tt "$HADOOP_DIR/bin/hadoop-daemon.sh start tasktracker"
-done <<< "$TASKTRACKER"
-
-# just to remind that multi-line variable was a problem
-# for tt in "$TASKTRACKER" ; do
-# 	echo "Starting the tasktracker on $tt"
-# 	ssh $tt "$HADOOP_DIR/bin/hadoop-daemon.sh start tasktracker"
-# 	echo "done tasktracker $tt"
-# done
+startDaemon "$NAMENODE" "namenode"
+startDaemon "$DATANODE" "datanode"
+startDaemon "$JOBTRACKER" "jobtracker"
+startDaemon "$TASKTRACKER" "tasktracker"
 
 verifyJPS $NAMENODE
 verifyJPS "$DATANODE"
