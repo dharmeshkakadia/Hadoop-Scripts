@@ -129,7 +129,7 @@ function configure(){
 function copyToSlaves(){
 	for srv in $1 ; do
 	  echo "Copying to $srv...";
-	  rsync -az --exclude='logs/*' $HADOOP_DIR/ $srv:$HADOOP_DIR/
+	  rsync -avz --exclude='logs/*' $HADOOP_DIR/ $srv:$HADOOP_DIR/
 	  ssh $srv "rm -fR /app"
 	done
 }
