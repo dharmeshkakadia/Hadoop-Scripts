@@ -172,6 +172,7 @@ ssh $NAMENODE "$HADOOP_DIR/bin/hadoop-daemon.sh start namenode"
 for dn in "$DATANODE" ; do
 	echo "Starting DataNode...$dn"
 	ssh $dn "$HADOOP_DIR/bin/hadoop-daemon.sh start datanode"
+	echo "done datanode $dn"
 done
 
 echo "Starting the jobtracker on $JOBTRACKER"
@@ -180,6 +181,7 @@ ssh $JOBTRACKER "$HADOOP_DIR/bin/hadoop-daemon.sh start jobtracker"
 for tt in "$TASKTRACKER" ; do
 	echo "Starting the tasktracker on $tt"
 	ssh $tt "$HADOOP_DIR/bin/hadoop-daemon.sh start tasktracker"
+	echo "done tasktracker $tt"
 done
 
 verifyJPS $NAMENODE
