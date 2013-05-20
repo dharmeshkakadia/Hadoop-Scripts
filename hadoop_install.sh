@@ -15,14 +15,12 @@ JAVA_HOME=/usr/lib/jvm/java-1.6.0-openjdk-amd64
 function usage () {
    cat <<EOF
 Usage: $0 [options] Cluster_properties_file
-	-d[URL]				download hadoop
-	-m					install map-reduce only
-	-f					install dfs only
+	-d[URL]	download hadoop
 	-j[Path_to_java]	use Java_Dir
 	-p[install_dir]		Install hadoop at install_dir
-	-o					Do not format the namenode
-	-v					executes and prints out verbose messages
-   	-h  				displays basic help
+	-o			Do not format the namenode
+	-v			executes and prints out verbose messages
+   	-h  		displays basic help
 EOF
 }
 
@@ -47,16 +45,12 @@ fi
 INSTALL_DIR=/usr/local
 HADOOP_TEMP=/app/hadoop/tmp
 HDFS_URI=hdfs://`grep -i namenode $PROPERTIES_FILE | cut -f 2`
-JOBTRACKER=`grep -i jobtracker $PROPERTIES_FILE  | cut -f 2`
 DFS_REPLICATION=2
 NN_FORMAT=1
 NAMENODE=`grep -i namenode $PROPERTIES_FILE  | cut -f 2 | cut -d ":" -f 1`
 DATANODE=`grep -i datanode $PROPERTIES_FILE  | cut -f 2`
+JOBTRACKER=`grep -i jobtracker $PROPERTIES_FILE  | cut -f 2 | cut -d ":" -f 1`
 TASKTRACKER=`grep -i tasktracker $PROPERTIES_FILE  | cut -f 2`
-
-MAP_REDUCE_ONLY=0
-DFS_ONLY=0
-
 
 while getopts "d:j:p:vhmf" opt; do
    case $opt in
@@ -70,9 +64,6 @@ while getopts "d:j:p:vhmf" opt; do
    		;;
    o ) 	NN_FORMAT=0;;
    v )	VERBOSE=1;;
-   m )  MAP_REDUCE_ONLY=1;;
-   f )  DFS_ONLY=1;;
-#        NN_FORMAT=0;;
    h )  usage ;;
    \?)  echo "Invalid Option: $OPTARG"
    		usage
@@ -119,14 +110,14 @@ function configure(){
 
 	echo "export JAVA_HOME=$JAVA_HOME" >> hadoop-env.sh
 
-    if [ $MAP_REDUCE_ONLY -ne 1 ] ;then #core-site.xml
+    if [ -n $NAMENODE ] ;then #core-site.xml
 	echo -e "<?xml version=\"1.0\"?><?xml-stylesheet type=\"text/xsl\" href=\"configuration.xsl\"?><configuration><property><name>hadoop.tmp.dir</name><value>$HADOOP_TEMP</value><description>A base for other temporary directories.</description></property><property><name>fs.default.name</name><value>$HDFS_URI</value><description>The name of the default file system.  A URI whosescheme and authority determine the FileSystem implementation.  Theuri's scheme determines the config property (fs.SCHEME.impl) namingthe FileSystem implementation class.  The uri's authority is used todetermine the host, port, etc. for a filesystem.</description></property></configuration>" > core-site.xml
 
     # hdfs-site.xml
 	echo -e "<?xml version=\"1.0\"?><?xml-stylesheet type=\"text/xsl\" href=\"configuration.xsl\"?><configuration><property><name>dfs.replication</name><value>$DFS_REPLICATION</value><description>Default block replication.The actual number of replications can be specified when the file is created.The default is used if replication is not specified in create time.</description></property></configuration>" > hdfs-site.xml
     fi
 
-    if [ $DFS_ONLY -ne 1 ] ; then	#mapred-site.xml
+    if [ -n $JOBTRACKER ] ; then	#mapred-site.xml
 	echo -e "<?xml version=\"1.0\"?><?xml-stylesheet type=\"text/xsl\" href=\"configuration.xsl\"?><configuration><property><name>mapred.job.tracker</name><value>$JOBTRACKER</value><description>The host and port that the MapReduce job tracker runs </description></property></configuration>" > mapred-site.xml
 
     fi
@@ -171,25 +162,19 @@ cd $HADOOP_DIR/bin/
 if [ $NN_FORMAT -eq 1 ] ;then
 	echo "Formatting the NameNode"
 	ssh $NAMENODE "$HADOOP_DIR/bin/hadoop namenode -format"
-
 fi
 
-if [ $MAP_REDUCE_ONLY -ne 1 ] ;then
+ssh $NAMENODE "$HADOOP_DIR/bin/hadoop-daemon.sh start namenode"
 
-	ssh $NAMENODE "$HADOOP_DIR/bin/hadoop-daemon.sh start namenode"
+for dn in $DATANODE; do
+	ssh $dn "$HADOOP_DIR/bin/hadoop-daemon.sh start datanode"
+done
 
-    for dn in $DATANODE; do
-		ssh $dn "$HADOOP_DIR/bin/hadoop-daemon.sh start datanode"
-    done
-fi
+ssh $JOBTRACKER "$HADOOP_DIR/bin/hadoop-daemon.sh start jobtracker"
 
-if [ $DFS_ONLY -ne 1 ] ; then
-	ssh $JOBTRACKER "$HADOOP_DIR/bin/hadoop-daemon.sh start jobtracker"
-
-    for tt in $TASKTRACKER; do
-		ssh $tt "$HADOOP_DIR/bin/hadoop-daemon.sh start tasktracker"
-    done
-fi
+for tt in $TASKTRACKER; do
+	ssh $tt "$HADOOP_DIR/bin/hadoop-daemon.sh start tasktracker"
+done
 
 verifyJPS $NAMENODE
 verifyJPS $DATANODE
