@@ -48,9 +48,9 @@ HDFS_URI=hdfs://`grep -i namenode $PROPERTIES_FILE | cut -f 2`
 DFS_REPLICATION=2
 NN_FORMAT=1
 NAMENODE=`grep -i namenode $PROPERTIES_FILE  | cut -f 2 | cut -d ":" -f 1`
-DATANODE=`grep -i datanode $PROPERTIES_FILE  |  sed 's/$/<br>/' | cut -f 2`
-JOBTRACKER=`grep -i jobtracker $PROPERTIES_FILE | cut -f 2 | cut -d ":" -f 1`
-TASKTRACKER=`grep -i tasktracker $PROPERTIES_FILE | sed 's/$/<br>/'  | cut -f 2`
+DATANODE=`grep -i datanode $PROPERTIES_FILE  | cut -f 2`
+JOBTRACKER=`grep -i jobtracker $PROPERTIES_FILE  | cut -f 2 | cut -d ":" -f 1`
+TASKTRACKER=`grep -i tasktracker $PROPERTIES_FILE  | cut -f 2`
 
 while getopts "d:j:p:vhmf" opt; do
    case $opt in
@@ -106,7 +106,8 @@ function configure(){
 	# actually not needed, used by start-all.sh and stop-all.sh
 	# master and slave files
 	echo $NAMENODE > masters
-	echo $DATANODE > slaves
+	echo "$DATANODE" > slaves
+	echo "$TASKTRACKER" > slaves
 
 	echo "export JAVA_HOME=$JAVA_HOME" >> hadoop-env.sh
 
@@ -150,9 +151,9 @@ sudo mv $INSTALL_DIR/hadoop-* $HADOOP_DIR
 
 configure $HADOOP_TEMP $2 $JAVA_HOME
 
-copyToSlaves $DATANODE
+copyToSlaves "$DATANODE"
 copyToSlaves $NAMENODE
-copyToSlaves $TASKTRACKER
+copyToSlaves "$TASKTRACKER"
 copyToSlaves $JOBTRACKER
 
 echo "-----------starting hadoop cluster-------------"
@@ -166,19 +167,19 @@ fi
 
 ssh $NAMENODE "$HADOOP_DIR/bin/hadoop-daemon.sh start namenode"
 
-for dn in $DATANODE; do
+for dn in "$DATANODE" ; do
 	ssh $dn "$HADOOP_DIR/bin/hadoop-daemon.sh start datanode"
 done
 
 ssh $JOBTRACKER "$HADOOP_DIR/bin/hadoop-daemon.sh start jobtracker"
 
-for tt in $TASKTRACKER; do
+for tt in "$TASKTRACKER" ; do
 	ssh $tt "$HADOOP_DIR/bin/hadoop-daemon.sh start tasktracker"
 done
 
 verifyJPS $NAMENODE
-verifyJPS $DATANODE
+verifyJPS "$DATANODE"
 verifyJPS $JOBTRACKER
-verifyJPS $TASKTRACKER
+verifyJPS "$TASKTRACKER"
 
 echo "done"
