@@ -53,8 +53,8 @@ NN_FORMAT=1
 MASTER=`grep -i jobtracker $PROPERTIES_FILE  | cut -f 2 | cut -d ":" -f 1`
 SLAVES=`grep -i tasktracker $PROPERTIES_FILE  | cut -f 2`
 
-MAP_REDUCE_ONLY=0;;
-DFS_ONLY=0;;
+MAP_REDUCE_ONLY=0
+DFS_ONLY=0
 
 
 while getopts "d:j:p:vhmf" opt; do
