@@ -174,7 +174,7 @@ while read -r dn
 do
     echo "Starting DataNode...$dn ......"
 	ssh "$dn" "$HADOOP_DIR/bin/hadoop-daemon.sh start datanode"
-done < <($DATANODE)
+done <<< "$DATANODE"
 
 echo "Starting the jobtracker on $JOBTRACKER"
 ssh $JOBTRACKER "$HADOOP_DIR/bin/hadoop-daemon.sh start jobtracker"
