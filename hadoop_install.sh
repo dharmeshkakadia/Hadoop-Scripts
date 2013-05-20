@@ -169,20 +169,27 @@ fi
 echo "Starting the NameNode on $NAMENODE"
 ssh $NAMENODE "$HADOOP_DIR/bin/hadoop-daemon.sh start namenode"
 
-for dn in "$DATANODE" ; do
-	echo "Starting DataNode...$dn"
+while read -r $dn
+do
+    echo "Starting DataNode...$dn"
 	ssh $dn "$HADOOP_DIR/bin/hadoop-daemon.sh start datanode"
-	echo "done datanode $dn"
-done
+done < <(DATANODE)
 
 echo "Starting the jobtracker on $JOBTRACKER"
 ssh $JOBTRACKER "$HADOOP_DIR/bin/hadoop-daemon.sh start jobtracker"
 
-for tt in "$TASKTRACKER" ; do
-	echo "Starting the tasktracker on $tt"
-	ssh $tt "$HADOOP_DIR/bin/hadoop-daemon.sh start tasktracker"
-	echo "done tasktracker $tt"
-done
+while read -r $tt
+do
+    echo "Starting the tasktracker on $tt"
+    ssh $tt "$HADOOP_DIR/bin/hadoop-daemon.sh start tasktracker"
+done < <(TASKTRACKER)
+
+# just to remind that multi-line variable was a problem
+# for tt in "$TASKTRACKER" ; do
+# 	echo "Starting the tasktracker on $tt"
+# 	ssh $tt "$HADOOP_DIR/bin/hadoop-daemon.sh start tasktracker"
+# 	echo "done tasktracker $tt"
+# done
 
 verifyJPS $NAMENODE
 verifyJPS "$DATANODE"
