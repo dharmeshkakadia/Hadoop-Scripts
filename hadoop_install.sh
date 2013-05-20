@@ -3,7 +3,7 @@
 # To Do
 # Install Dependdencies like java, ssh etc
 #
-# Takes argument as properties file which gives the cluster parameters 
+# Takes argument as properties file which gives the cluster parameters
 # (see the example Properties file at https://github.com/dharmeshkakadia/Hadoop-Scripts/blob/master/properties)
 
 # change JAVA_HOME according to your environment
@@ -16,6 +16,8 @@ function usage () {
    cat <<EOF
 Usage: $0 [options] Cluster_properties_file
 	-d[URL]				download hadoop
+	-m					install map-reduce only
+	-f					install dfs only
 	-j[Path_to_java]	use Java_Dir
 	-p[install_dir]		Install hadoop at install_dir
 	-o					Do not format the namenode
@@ -33,7 +35,7 @@ then
 else
         if [ ! -f $1 ]
         then
-                echo "$1 File does not exist" 
+                echo "$1 File does not exist"
         else
                 PROPERTIES_FILE=$1
                 shift
@@ -51,7 +53,11 @@ NN_FORMAT=1
 MASTER=`grep -i jobtracker $PROPERTIES_FILE  | cut -f 2 | cut -d ":" -f 1`
 SLAVES=`grep -i slave $PROPERTIES_FILE  | cut -f 2`
 
-while getopts "d:j:p:vh" opt; do
+MAP_REDUCE_ONLY=0;;
+DFS_ONLY=0;;
+
+
+while getopts "d:j:p:vhmf" opt; do
    case $opt in
 
    d )  echo "Downloading hadoop tar from $OPTARG"
@@ -62,10 +68,13 @@ while getopts "d:j:p:vh" opt; do
    p ) 	INSTALL_DIR=$OPTARG
    		;;
    o ) 	NN_FORMAT=0;;
-   v )	VERBOSE=1;;		
+   v )	VERBOSE=1;;
+   m )  MAP_REDUCE_ONLY=1;;
+   f )  DFS_ONLY=1
+        NN_FORMAT=0;;
    h )  usage ;;
    \?)  echo "Invalid Option: $OPTARG"
-   		usage 
+   		usage
    		exit 1
    		;;
    :)   echo "Option -$OPTARG requires an argument." >&2
@@ -100,23 +109,28 @@ function configure(){
 	echo "-----------starting configuration-------------"
 	sudo rm -rf $HADOOP_TEMP
 	sudo mkdir -p $HADOOP_TEMP
-	
+
 	cd $HADOOP_DIR/conf/
 	# actually not needed, used by start-all.sh and stop-all.sh
 	# master and slave files
 	echo $MASTER > masters
 	echo $SLAVES > slaves
-	
+
 	echo "export JAVA_HOME=$JAVA_HOME" >> hadoop-env.sh
-	
+
+    if [ $MAP_REDUCE_ONLY -ne 1 ] ;then
 	#core-site.xml
 	echo -e "<?xml version=\"1.0\"?><?xml-stylesheet type=\"text/xsl\" href=\"configuration.xsl\"?><configuration><property><name>hadoop.tmp.dir</name><value>$HADOOP_TEMP</value><description>A base for other temporary directories.</description></property><property><name>fs.default.name</name><value>$HDFS_URI</value><description>The name of the default file system.  A URI whosescheme and authority determine the FileSystem implementation.  Theuri's scheme determines the config property (fs.SCHEME.impl) namingthe FileSystem implementation class.  The uri's authority is used todetermine the host, port, etc. for a filesystem.</description></property></configuration>" > core-site.xml
 
-	#mapred-site.xml	
-	echo -e "<?xml version=\"1.0\"?><?xml-stylesheet type=\"text/xsl\" href=\"configuration.xsl\"?><configuration><property><name>mapred.job.tracker</name><value>$JOBTRACKER</value><description>The host and port that the MapReduce job tracker runs </description></property></configuration>" > mapred-site.xml
-	
-	# hdfs-site.xml
+    # hdfs-site.xml
 	echo -e "<?xml version=\"1.0\"?><?xml-stylesheet type=\"text/xsl\" href=\"configuration.xsl\"?><configuration><property><name>dfs.replication</name><value>$DFS_REPLICATION</value><description>Default block replication.The actual number of replications can be specified when the file is created.The default is used if replication is not specified in create time.</description></property></configuration>" > hdfs-site.xml
+    fi
+
+    if [ $DFS_ONLY -ne 1 ] ; then
+	#mapred-site.xml
+	echo -e "<?xml version=\"1.0\"?><?xml-stylesheet type=\"text/xsl\" href=\"configuration.xsl\"?><configuration><property><name>mapred.job.tracker</name><value>$JOBTRACKER</value><description>The host and port that the MapReduce job tracker runs </description></property></configuration>" > mapred-site.xml
+
+    fi
 }
 
 
@@ -126,7 +140,7 @@ function copyToSlaves(){
 	  echo "Copying to $srv...";
 	  rsync -az --exclude='logs/*' $HADOOP_DIR/ $srv:$HADOOP_DIR/
 #	  ssh $srv "rm -fR /app"
-	done
+	done ]
 }
 
 # Verify the status of hadoop-daemons
@@ -155,8 +169,14 @@ if [ $NN_FORMAT -eq 1 ] ;then
 	echo "Formatting the NameNode"
 	./hadoop namenode -format
 fi
-./start-dfs.sh
+
+if [ $MAP_REDUCE_ONLY -ne 1 ] ;then
+    ./start-dfs.sh
+fi
+
+if [ $DFS_ONLY -ne 1 ] ; then
 ./start-mapred.sh
+fi
 
 verifyJPS $SLAVES
 
