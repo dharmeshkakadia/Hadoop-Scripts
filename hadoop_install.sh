@@ -48,9 +48,9 @@ HDFS_URI=hdfs://`grep -i namenode $PROPERTIES_FILE | cut -f 2`
 DFS_REPLICATION=2
 NN_FORMAT=1
 NAMENODE=`grep -i namenode $PROPERTIES_FILE  | cut -f 2 | cut -d ":" -f 1`
-DATANODE=`grep -i datanode $PROPERTIES_FILE  | cut -f 2`
-JOBTRACKER=`grep -i jobtracker $PROPERTIES_FILE  | cut -f 2 | cut -d ":" -f 1`
-TASKTRACKER=`grep -i tasktracker $PROPERTIES_FILE  | cut -f 2`
+DATANODE=`grep -i datanode $PROPERTIES_FILE  |  sed 's/$/<br>/' | cut -f 2`
+JOBTRACKER=`grep -i jobtracker $PROPERTIES_FILE | cut -f 2 | cut -d ":" -f 1`
+TASKTRACKER=`grep -i tasktracker $PROPERTIES_FILE | sed 's/$/<br>/'  | cut -f 2`
 
 while getopts "d:j:p:vhmf" opt; do
    case $opt in
