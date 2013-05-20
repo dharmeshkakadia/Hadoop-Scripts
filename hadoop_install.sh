@@ -45,6 +45,7 @@ fi
 INSTALL_DIR=/usr/local
 HADOOP_TEMP=/app/hadoop/tmp
 HDFS_URI=hdfs://`grep -i namenode $PROPERTIES_FILE | cut -f 2`
+JOBTRACKER_URI=`grep -i jobtracker $PROPERTIES_FILE | cut -f 2`
 DFS_REPLICATION=2
 NN_FORMAT=1
 NAMENODE=`grep -i namenode $PROPERTIES_FILE  | cut -f 2 | cut -d ":" -f 1`
@@ -120,7 +121,7 @@ function configure(){
     fi
 
     if [ -n $JOBTRACKER ] ; then	#mapred-site.xml
-	echo -e "<?xml version=\"1.0\"?><?xml-stylesheet type=\"text/xsl\" href=\"configuration.xsl\"?><configuration><property><name>mapred.job.tracker</name><value>$JOBTRACKER</value><description>The host and port that the MapReduce job tracker runs </description></property></configuration>" > mapred-site.xml
+	echo -e "<?xml version=\"1.0\"?><?xml-stylesheet type=\"text/xsl\" href=\"configuration.xsl\"?><configuration><property><name>mapred.job.tracker</name><value>$JOBTRACKER_URI</value><description>The host and port that the MapReduce job tracker runs </description></property></configuration>" > mapred-site.xml
 
     fi
 }
@@ -169,20 +170,20 @@ fi
 echo "Starting the NameNode on $NAMENODE"
 ssh $NAMENODE "$HADOOP_DIR/bin/hadoop-daemon.sh start namenode"
 
-while read -r $dn
+while read -r dn
 do
-    echo "Starting DataNode...$dn"
-	ssh $dn "$HADOOP_DIR/bin/hadoop-daemon.sh start datanode"
+    echo "Starting DataNode...$dn ......"
+	ssh "$dn" "$HADOOP_DIR/bin/hadoop-daemon.sh start datanode"
 done < <($DATANODE)
 
 echo "Starting the jobtracker on $JOBTRACKER"
 ssh $JOBTRACKER "$HADOOP_DIR/bin/hadoop-daemon.sh start jobtracker"
 
-while read -r $tt
+while read -r tt
 do
-    echo "Starting the tasktracker on $tt"
+    echo "Starting the tasktracker on $tt ....."
     ssh $tt "$HADOOP_DIR/bin/hadoop-daemon.sh start tasktracker"
-done < <($TASKTRACKER)
+done <<< "$TASKTRACKER"
 
 # just to remind that multi-line variable was a problem
 # for tt in "$TASKTRACKER" ; do
