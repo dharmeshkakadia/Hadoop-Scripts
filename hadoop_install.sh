@@ -173,7 +173,7 @@ while read -r $dn
 do
     echo "Starting DataNode...$dn"
 	ssh $dn "$HADOOP_DIR/bin/hadoop-daemon.sh start datanode"
-done < <(DATANODE)
+done < <($DATANODE)
 
 echo "Starting the jobtracker on $JOBTRACKER"
 ssh $JOBTRACKER "$HADOOP_DIR/bin/hadoop-daemon.sh start jobtracker"
@@ -182,7 +182,7 @@ while read -r $tt
 do
     echo "Starting the tasktracker on $tt"
     ssh $tt "$HADOOP_DIR/bin/hadoop-daemon.sh start tasktracker"
-done < <(TASKTRACKER)
+done < <($TASKTRACKER)
 
 # just to remind that multi-line variable was a problem
 # for tt in "$TASKTRACKER" ; do
