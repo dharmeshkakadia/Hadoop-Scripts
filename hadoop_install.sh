@@ -158,22 +158,26 @@ copyToSlaves $JOBTRACKER
 
 echo "-----------starting hadoop cluster-------------"
 # format namenode
-cd $HADOOP_DIR/bin/
+#cd $HADOOP_DIR/bin/
 
 if [ $NN_FORMAT -eq 1 ] ;then
-	echo "Formatting the NameNode"
+	echo "Formatting the NameNode........"
 	ssh $NAMENODE "$HADOOP_DIR/bin/hadoop namenode -format"
 fi
 
+echo "Starting the NameNode on $NAMENODE"
 ssh $NAMENODE "$HADOOP_DIR/bin/hadoop-daemon.sh start namenode"
 
 for dn in "$DATANODE" ; do
+	echo "Starting DataNode...$dn"
 	ssh $dn "$HADOOP_DIR/bin/hadoop-daemon.sh start datanode"
 done
 
+echo "Starting the jobtracker on $JOBTRACKER"
 ssh $JOBTRACKER "$HADOOP_DIR/bin/hadoop-daemon.sh start jobtracker"
 
 for tt in "$TASKTRACKER" ; do
+	echo "Starting the DataNode on $tt"
 	ssh $tt "$HADOOP_DIR/bin/hadoop-daemon.sh start tasktracker"
 done
 
