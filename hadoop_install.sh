@@ -107,7 +107,8 @@ function configure(){
 	# master and slave files
 	echo $NAMENODE > masters
 	echo "$DATANODE" > slaves
-	echo "$TASKTRACKER" > slaves
+	echo "$TASKTRACKER" >> slaves
+	#run uniq on slaves
 
 	echo "export JAVA_HOME=$JAVA_HOME" >> hadoop-env.sh
 
@@ -177,7 +178,7 @@ echo "Starting the jobtracker on $JOBTRACKER"
 ssh $JOBTRACKER "$HADOOP_DIR/bin/hadoop-daemon.sh start jobtracker"
 
 for tt in "$TASKTRACKER" ; do
-	echo "Starting the DataNode on $tt"
+	echo "Starting the tasktracker on $tt"
 	ssh $tt "$HADOOP_DIR/bin/hadoop-daemon.sh start tasktracker"
 done
 
