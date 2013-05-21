@@ -15,10 +15,11 @@ JAVA_HOME=/usr/lib/jvm/java-1.6.0-openjdk-amd64
 function usage () {
    cat <<EOF
 Usage: $0 [options] Cluster_properties_file
-	-d[URL]	download hadoop
+	-u[URL]	download hadoop
 	-j[Path_to_java]	use Java_Dir
 	-p[install_dir]		Install hadoop at install_dir
 	-o			Do not format the namenode
+	-d 			DFS data Directory
 	-v			executes and prints out verbose messages
    	-h  		displays basic help
 EOF
@@ -44,6 +45,7 @@ fi
 # Hadoop Installation localation
 INSTALL_DIR=/usr/local
 HADOOP_TEMP=/app/hadoop/tmp
+DFS_DATA_DIR=/media/disk3
 HDFS_URI=hdfs://`grep -i namenode $PROPERTIES_FILE | cut -f 2`
 JOBTRACKER_URI=`grep -i jobtracker $PROPERTIES_FILE | cut -f 2`
 DFS_REPLICATION=2
@@ -53,15 +55,17 @@ DATANODE=`grep -i datanode $PROPERTIES_FILE  | cut -f 2`
 JOBTRACKER=`grep -i jobtracker $PROPERTIES_FILE  | cut -f 2 | cut -d ":" -f 1`
 TASKTRACKER=`grep -i tasktracker $PROPERTIES_FILE  | cut -f 2`
 
-while getopts "d:j:p:vhmf" opt; do
+while getopts "u:j:p:d:vhmf" opt; do
    case $opt in
 
-   d )  echo "Downloading hadoop tar from $OPTARG"
+   u )  echo "Downloading hadoop tar from $OPTARG"
 	   	wget $OPTARG
 		;;
    j ) 	JAVA_HOME=$OPTARG
    		;;
    p ) 	INSTALL_DIR=$OPTARG
+   		;;
+   d ) 	DFS_DATA_DIR=$OPTARG
    		;;
    o ) 	NN_FORMAT=0;;
    v )	VERBOSE=1;;
@@ -117,7 +121,7 @@ function configure(){
 	echo -e "<?xml version=\"1.0\"?><?xml-stylesheet type=\"text/xsl\" href=\"configuration.xsl\"?><configuration><property><name>hadoop.tmp.dir</name><value>$HADOOP_TEMP</value><description>A base for other temporary directories.</description></property><property><name>fs.default.name</name><value>$HDFS_URI</value><description>The name of the default file system.  A URI whosescheme and authority determine the FileSystem implementation.  Theuri's scheme determines the config property (fs.SCHEME.impl) namingthe FileSystem implementation class.  The uri's authority is used todetermine the host, port, etc. for a filesystem.</description></property></configuration>" > core-site.xml
 
     # hdfs-site.xml
-	echo -e "<?xml version=\"1.0\"?><?xml-stylesheet type=\"text/xsl\" href=\"configuration.xsl\"?><configuration><property><name>dfs.replication</name><value>$DFS_REPLICATION</value><description>Default block replication.The actual number of replications can be specified when the file is created.The default is used if replication is not specified in create time.</description></property></configuration>" > hdfs-site.xml
+	echo -e "<?xml version=\"1.0\"?><?xml-stylesheet type=\"text/xsl\" href=\"configuration.xsl\"?><configuration><property><name>dfs.replication</name><value>$DFS_REPLICATION</value><description>Default block replication.The actual number of replications can be specified when the file is created.The default is used if replication is not specified in create time.</description></property><property><name>dfs.data.dir</name><value>$DFS_DATA_DIR</value><description>Determines where on the local filesystem an DFS data node should store its blocks. If this is a comma-delimited list of directories, then data will be stored in all named directories, typically on different devices. Directories that do not exist are ignored.</description></property></configuration>" > hdfs-site.xml
     fi
 
     if [ -n $JOBTRACKER ] ; then	#mapred-site.xml
