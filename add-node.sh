@@ -27,7 +27,7 @@ done
 
 # Node reachable ?
 echo "Checking connectivity to the node..."
-ping $1
+ping $1 -c 5
 
 if [ "$?" -ne 0 ]; then
   echo "Ping to the node $1 Failed. Check the node connectivity and try again" >&2
