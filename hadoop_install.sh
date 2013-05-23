@@ -96,7 +96,7 @@ hadoop_tar=`find -name hadoop*.tar.gz`
 
 if [ ! -f "$hadoop_tar" ];
 then
-	echo "Hadoop tar not found at location : $hadoop_tar. You can download form hadoop mirror using -d option"
+	echo "Hadoop tar not found at location : $hadoop_tar. You can download form hadoop mirror using -u option"
 	exit
 fi
 

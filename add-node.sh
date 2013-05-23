@@ -4,9 +4,26 @@
 # takes first argument as the ip_address/name of the node to be added
 
 if [ "$#" -ne 1 ]; then
-  echo "Usage: $0 Node_IP" >&2
+  echo "Usage: $0 [options] Node_IP" >&2
   exit 1
 fi
+
+DFS_ONLY=0
+MAPREDUCE_ONLY=0
+INSTALL_DIR=/usr/local
+
+while getopts "md" opt; do
+   case $opt in
+
+   m ) 	MAPREDUCE_ONLY=1
+   		;;
+   d ) 	DFS_ONLY=1;;
+   \?)  echo "Invalid Option: $OPTARG"
+   		usage
+   		exit 1
+   		;;
+   esac
+done
 
 # Node reachable ?
 echo "Checking connectivity to the node..."
@@ -17,19 +34,22 @@ if [ "$?" -ne 0 ]; then
   exit 1
 fi
 
-cd /usr/local/hadoop/conf
-echo $1 >> slaves
+#cd /usr/local/hadoop/conf
+#echo $1 >> slaves
 
 # copy hadoop
 rsync -vaz --exclude='logs/*' /usr/local/hadoop $1:/usr/local/
 
 #refresh nodelist
-../bin/hadoop dfsadmin -refreshNodes
-../bin/hadoop mradmin -refreshNodes
+if [ $MAPREDUCE_ONLY -eq 1 ] ;then
+	$INSTALL_DIR/hadoop/bin/hadoop mradmin -refreshNodes
+	ssh $1 "$INSTALL_DIR/hadoop/bin/hadoop-daemon.sh start tasktracker"
+fi
 
-# start the daemons
-ssh $1 "/usr/local/hadoop/bin/hadoop-daemon.sh start datanode"
-ssh $1 "/usr/local/hadoop/bin/hadoop-daemon.sh start tasktracker"
+if [ $MAPREDUCE_ONLY -eq 1 ] ;then
+	$INSTALL_DIR/hadoop/bin/hadoop dfsadmin -refreshNodes
+	ssh $1 "$INSTALL_DIR/hadoop/bin/hadoop-daemon.sh start datanode"
+fi
 
 # verify
 ssh $1 "jps"
