@@ -41,12 +41,12 @@ fi
 rsync -vaz --exclude='logs/*' /usr/local/hadoop $1:/usr/local/
 
 #refresh nodelist
-if [ $MAPREDUCE_ONLY -eq 1 ] ;then
+if [ $MAPREDUCE_ONLY -eq 0 ] ;then
 	$INSTALL_DIR/hadoop/bin/hadoop mradmin -refreshNodes
 	ssh $1 "$INSTALL_DIR/hadoop/bin/hadoop-daemon.sh start tasktracker"
 fi
 
-if [ $MAPREDUCE_ONLY -eq 1 ] ;then
+if [ $MAPREDUCE_ONLY -eq 0 ] ;then
 	$INSTALL_DIR/hadoop/bin/hadoop dfsadmin -refreshNodes
 	ssh $1 "$INSTALL_DIR/hadoop/bin/hadoop-daemon.sh start datanode"
 fi
