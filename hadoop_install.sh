@@ -18,10 +18,11 @@ Usage: $0 [options] Cluster_properties_file
 	-u[URL]	download hadoop
 	-j[Path_to_java]	use Java_Dir
 	-p[install_dir]		Install hadoop at install_dir
+	-r[proxyhost:proxy-port]	use proxy with wget
 	-o			Do not format the namenode
 	-d 			DFS data Directory
 	-v			executes and prints out verbose messages
-   	-h  		displays basic help
+   	-h  		displays this help
 EOF
 }
 
@@ -44,6 +45,7 @@ fi
 
 # Hadoop Installation localation
 INSTALL_DIR=/usr/local
+PROXY=
 HADOOP_TEMP=/app/hadoop/tmp
 DFS_DATA_DIR=/media/disk3
 HDFS_URI=hdfs://`grep -i namenode $PROPERTIES_FILE | cut -f 2`
@@ -55,11 +57,14 @@ DATANODE=`grep -i datanode $PROPERTIES_FILE  | cut -f 2`
 JOBTRACKER=`grep -i jobtracker $PROPERTIES_FILE  | cut -f 2 | cut -d ":" -f 1`
 TASKTRACKER=`grep -i tasktracker $PROPERTIES_FILE  | cut -f 2`
 
-while getopts "u:j:p:d:vhmf" opt; do
+while getopts "r:u:j:p:d:vhmf" opt; do
    case $opt in
 
+   r )	PROXY=$OPTARG
+		echo "Using PROXY=$PROXY"
+		;;
    u )  echo "Downloading hadoop tar from $OPTARG"
-	   	wget $OPTARG
+	   	wget -e "http_proxy=$PROXY" $OPTARG
 		;;
    j ) 	JAVA_HOME=$OPTARG
    		;;
